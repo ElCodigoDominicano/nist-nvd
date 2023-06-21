@@ -37,7 +37,6 @@ class NIST:
             sources_response = s.get(self.SOURCE_DATA, auth=self.AUTH)
         return sources_response
     
-    
     def nvd_cves(self):
         """Common Vulnerabilities and Exposures. The NVD contains 217,963 CVE records. 
         Because of this, its APIs enforce offset-based pagination to answer requests for 
@@ -57,7 +56,6 @@ class NIST:
             cves_response = s.get(self.BASE_URL, auth=self.AUTH)
         return cves_response
     
-    
     def search_by_identifier(self, identifier: str):
         """Searches the NVD DB via a identifier
     
@@ -72,7 +70,6 @@ class NIST:
         with requests.Session() as s:
             with_identifier_response = s.get(f"{self.BASE_URL}?sourceIdentifier={identifier}", auth=self.AUTH)
         return with_identifier_response            
-
         
     def search_by_keyword(self, keyword: str, keyword_exact_match: bool):
         """Searches the NVD DB via a keyword
@@ -100,7 +97,6 @@ class NIST:
                 not_exact_keyword_response = s.get(f"{self.BASE_URL}?keywordSearch={keyword}", auth=self.AUTH)
                 return not_exact_keyword_response
 
-
     def search_by_cpe_name(self, cpe_name: str, is_it_vulnerable: bool):
         """Searches the NVD DB via its CPE_NAME if IS_VULNERABLE set to True
         it will return all CVE associated with a specific CPE marked as "vulnerable".
@@ -127,8 +123,7 @@ class NIST:
             else:
                 cpe_isnt_vulnerable_response = s.get(f"{self.BASE_URL}cpeName={cpe_name}", auth=self.AUTH)
                 return cpe_isnt_vulnerable_response
-            
-            
+                     
     def search_by_cve_identifier(self, year: int, cve_identifier: int):
         """Searches the NVD DB via the year and its Common Vulnerability Exposures (CVE) identifier
             
@@ -147,7 +142,6 @@ class NIST:
             cve_identifier_response = s.get(f"{self.BASE_URL}?cveId=CVE-{year}-{cve_identifier}", auth=self.AUTH)
         return cve_identifier_response
    
- 
     def cve_with_technical_alerts(self):
         """Request all CVE containing a Technical Alert from US-CERT 
         
@@ -157,7 +151,6 @@ class NIST:
         with requests.Session() as s:
             cert_alerts_response = s.get(f"{self.BASE_URL}?hasCertAlerts", auth=self.AUTH)
         return cert_alerts_response    
-    
     
     def cve_with_vulnerability_note(self):
         """Request all CVE containing a Vulnerability Note from CERT/CC
@@ -170,7 +163,6 @@ class NIST:
         with requests.Session() as s:
             vulnerability_note_response = s.get(f"{self.BASE_URL}?hasCertNotes", auth=self.AUTH)
         return vulnerability_note_response
-    
                 
     def known_exploited_vulnerabilities(self):
         """Request all CVE that appear in the Known Exploited Vulnerabilities (KEV) catalog
@@ -183,7 +175,6 @@ class NIST:
         with requests.Session() as s:
             kev_catalog_response = s.get(f"{self.BASE_URL}?hasCertNotes", auth=self.AUTH)
         return kev_catalog_response    
-    
                 
     def open_vulnerability_assessment_language(self):
         """Request all CVE containing an Open Vulnerability Assessment Language (OVAL) record
@@ -195,11 +186,17 @@ class NIST:
         with requests.Session() as s:
             oval_response = s.get(f"{self.BASE_URL}?hasOval", auth=self.AUTH)
         return oval_response
-    
-                  
+     
+                      
 # Helper Function 1
 def response_checker(response: requests.Response):
-    # print(response)
+    """Response handling function, if everything is ok a JSON 
+    (dict in case of python) is RETURNED otherwise an error 
+    message is returned
+    
+    Author: AERivas
+    Date: 06/21/2023"""
+    
     try:
         # return json data if the status_code was 200, else error
         if response.status_code == 200: 
@@ -207,10 +204,9 @@ def response_checker(response: requests.Response):
         elif response.status_code == 404:
             return f"{response.status_code} - Page not Found."
     except requests.ConnectionError as ce:
-        print(ce.args[0].reason.__str__()[ce.args[0].reason.__str__().find(':')+2:])
-        print(f"failed trying to connect to => {ce.request.url}")
-        print('Check your internet for connectivity.')
-       
+        return f"{ce.args[0].reason.__str__()[ce.args[0].reason.__str__().find(':')+2:]} +\
+              failed trying to connect to => {ce.request.url} +\
+              Please, Check your internet for connectivity."
   
 # Helper Function 2
 def source_data_printer(sources):
