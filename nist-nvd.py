@@ -15,8 +15,6 @@ takes around 2-3 minutes. Only if you choose to write the data grabbed
 from the database. This program does not download [ALL] vulnerability 
 information from the database. The program still isn't finished just yet.
 
-
-
 Author: AERivas
 Date: 06/13/2023"""
 
