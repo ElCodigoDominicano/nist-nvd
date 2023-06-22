@@ -1,11 +1,17 @@
 """This program (just another python wrapper...) is used to obtain 
-vulnerabilities from the National Vulnerability Database (NVD) 
+vulnerability information from the National Vulnerability Database (NVD) 
 provided by the National Institute of Standards and Technology (NIST)
 an agency of the U.S. Department of Commerce.
 
-** The Author is not affiliated with any government, government agencies, and/or agencies affiliated with the government**
+** The Author is not affiliated with any government, government agencies, 
+and/or agencies affiliated with the government**
 
-!!! USERS MUST PROVIDE THEIR OWN API KEY GET ONE FROM https://nvd.nist.gov/developers/request-an-api-key !!!
+!!! USERS MUST PROVIDE THEIR OWN API KEY GET ONE FROM 
+https://nvd.nist.gov/developers/request-an-api-key !!!
+
+NOTE: If you uncomment all lines at the end of this file the program
+will write 10 json files in the same directory as the .py file
+takes around 2-3 minutes....
 
 Author: AERivas
 Date: 06/13/2023"""
