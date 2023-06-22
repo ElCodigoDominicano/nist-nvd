@@ -11,6 +11,8 @@ Author: AERivas
 Date: 06/13/2023"""
 
 import requests
+import json
+import os
 
 from requests.auth import HTTPBasicAuth
 from dataclasses import dataclass
@@ -23,21 +25,20 @@ class NIST:
     API_KEY = "YOUR_KEY_PROVIDED_BY_NIST_HERE"
     AUTH = HTTPBasicAuth("apiKey", API_KEY)
     
-    
-    def retrieve_sources(self):
+    def get_source_response(self):
         """retrieve detailed information on the organizations 
         that provide the data contained in the NVD dataset.
         
         ~limit once a day~
         
         Author: AERivas
-        Date: 06/21/2023
-        """
+        Date: 06/21/2023"""
+        
         with requests.Session() as s:
             sources_response = s.get(self.SOURCE_DATA, auth=self.AUTH)
         return sources_response
     
-    def nvd_cves(self):
+    def get_cves_response(self):
         """Common Vulnerabilities and Exposures. The NVD contains 217,963 CVE records. 
         Because of this, its APIs enforce offset-based pagination to answer requests for 
         large collections. Through a series of smaller “chunked” responses controlled by 
@@ -189,107 +190,95 @@ class NIST:
      
                       
 # Helper Function 1
-def response_checker(response: requests.Response):
+def get_json_data(response: requests.Response):
     """Response handling function, if everything is ok a JSON 
     (dict in case of python) is RETURNED otherwise an error 
     message is returned
     
     Author: AERivas
     Date: 06/21/2023"""
-    
-    try:
-        # return json data if the status_code was 200, else error
-        if response.status_code == 200: 
-            return response.json()
-        elif response.status_code == 404:
-            return f"{response.status_code} - Page not Found."
-    except requests.ConnectionError as ce:
-        return f"{ce.args[0].reason.__str__()[ce.args[0].reason.__str__().find(':')+2:]} +\
-              failed trying to connect to => {ce.request.url} +\
-              Please, Check your internet for connectivity."
-  
-# Helper Function 2
-def source_data_printer(sources):
-    """Takes in the JSON Object (dictionary in pythons case)
-    prints all data found inside that object.
-        
-    Parameter sources: is a JSON object (again a dictionary datatype in pythons case.)
-        
-    Author: AERivas
-    Date: 06/15/2023"""
-    for x in sources.json()['sources']:
-        v2_extra = ""
-        v3_extra = ""
-        cwe_extra = ""
-        name = x.get('name')
-        contact_email = x.get('contactEmail')
-        source_ident = x.get('sourceIdentifiers')
-        last_mod = x.get('lastModified')
-        created = x.get('created')
-        v2 = x.get('v2AcceptanceLevel', {})
-        v3 = x.get('v3AcceptanceLevel', {})
-        cwe = x.get('cweAcceptanceLevel', {})
-        try:
-            if v2:
-                v2_extra += "Description: " + v2['description']
-                v2_extra += " Last Modified: " + v2['lastModified']
-            if v3:
-                v3_extra += "Description: " + v3['description']
-                v3_extra += " Last Modified: " + v3['lastModified']
-            if cwe:
-                cwe_extra += "Description: " +cwe['description']
-                cwe_extra += " Last Modified: " + cwe['lastModified']
-            if not v2:
-                v2_extra = None
-            if not v3:
-                v3_extra = None
-            if not cwe:
-                cwe_extra = None
-        except KeyError:
-            pass # when either v2, v3, and or cwe isn't found
-        
-        print(
-            "Name:",name,
-            "Contact Email", contact_email,
-            "Source:", " | ".join(source_ident),
-            "Last Modified:", last_mod,
-            "Created:", created,
-            "V2 =>", v2_extra,
-            "V3 =>", v3_extra,
-            "CWE =>", cwe_extra
-        )
 
-if __name__ == '__main__': 
-    nist = NIST() # instantiate the NIST Object
-   
+    # return json data if the status_code was 200, else error message
+    if response.status_code == 200: 
+        return response.json()
+    elif response.status_code == 404:
+        return f"{response.status_code} - Page not found."
+
+
+# Helper Function 2
+def does_filename_exist(path):
+    """This function checks if the filename the user has
+    chosen is taken, if taken it will append a number before
+    its file extension
+    
+    Author: AERivas
+    Date: 06/22/2023"""
+        
+    count = 1
+    filename, extension = os.path.splitext(path)
+    if extension != ".json":
+        exit(f"The file must end with .json as its extension not {extension}. Please try again.")
+    while os.path.exists(path):
+        path = filename + f"-{count}" + extension
+        count += 1    
+    return path
+
+
+# Helper Function 3
+def write_to_json_file(data, filename: str) -> None:
+    """This function is used to write data grabbed
+    from the requests made to the NISTs NVD.
+    
+    Author: AERivas
+    Date: 06/22/2023"""
+
+    json_data = json.dumps(data, indent=4)
+    filename = does_filename_exist(filename)
+    with open(filename, 'w') as file_object:
+        file_object.write(json_data)
+
+
+if __name__ == '__main__':
+    nist = Nist()
     ####### TO TEST UNCOMMENT LINES BELOW #######
     
-    # sources = nist.retrieve_sources()
-    # print(source_data_printer(sources))
+    # sources = nist.get_source_response()
+    # sources_json = get_json_data(sources)
+    # write_to_json_file(sources_json, "nist-nvd-sources.json")   
+
+    # cves = nist.get_cves_response()
+    # cves_json = get_json_data(cves)
+    # write_to_json_file(cves_json, "nist-nvd-cves.json")        
     
-    # cves = nist.nvd_cves()
-    # print(response_checker(cves))
-        
     # using_identifier = nist.search_by_identifier('cve@mitre.org')
-    # print(response_checker(using_identifier))
-        
+    # identifier_json = get_json_data(using_identifier)
+    # write_to_json_file(identifier_json, 'nist-nvd-identifier.json')      
+      
     # using_keyword = nist.search_by_keyword('Microsoft Outlook', False) # Change to True for Exact Keyword Matching
-    # print(response_checker(using_keyword))
-    
+    # keyword_json = get_json_data(using_keyword)
+    # write_to_json_file(keyword_json, "nist-nvd-keyword.json")
+        
     # cve_id = nist.search_by_cve_identifier(2019, 1010218) #BOTH ARGS MUST BE INTEGERS!! ex: YEAR => 2019 ID => 1010218
-    # print(response_checker(cve_id))
-    
+    # cve_id_json = get_json_data(cve_id)
+    # write_to_json_file(cve_id_json, "nist-nvd-cve-id.json")
+        
     # cpe_name = nist.search_by_cpe_name("cpe:2.3:o:microsoft:windows_10:1607:*:*:*:*:*:*:*", False) # Change to True to check if its vulnerable
-    # print(response_checker(cpe_name))
+    # cpe_name_json = get_json_data(cpe_name)    
+    # write_to_json_file(cpe_name, "nist-nvd-cpe-name.json")
     
     # technical_alerts = nist.cve_with_technical_alerts()
-    # print(response_checker(technical_alerts))
+    # technical_alerts_json = get_json_data(technical_alerts)
+    # write_to_json_file(technical_alerts_json, "nist-nvd-technical-alerts.json")
     
     # vulnerability_note = nist.cve_with_vulnerability_note()
-    # print(response_checker(vulnerability_note))    
-   
+    # vulnerability_note_json = get_json_data(vulnerability_note)
+    # write_to_json_file(vulnerability_note_json, "nist-nvd-vulnerability-note.json")
+    
     # kev_catalog = nist.known_exploited_vulnerabilities()
-    # print(response_checker(kev_catalog))
+    # kev_catalog_json = get_json_data(kev_catalog)
+    # write_to_json_file(kev_catalog_json, "nist-nvd-kev-catalog.json")
     
     # oval = nist.open_vulnerability_assessment_language()
-    # print(response_checker(oval))
+    # oval_json = get_json_data(oval)
+    # write_to_json_file(oval_json, "nist-nvd-oval.json")
+    
