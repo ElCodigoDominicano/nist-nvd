@@ -245,7 +245,7 @@ def write_to_json_file(data, filename: str) -> None:
 
 
 if __name__ == '__main__':
-    nist = Nist()
+    nist = NIST()
     ####### TO TEST UNCOMMENT LINES BELOW #######
     
     # sources = nist.get_source_response()
