@@ -11,8 +11,10 @@ https://nvd.nist.gov/developers/request-an-api-key !!!
 
 NOTE: If you uncomment all lines at the end of this file the program
 will write 10 json files in the same directory as the .py file
-takes around 2-3 minutes.... This doesn't download ALL vulnerability information
-from the database the program still isn't finished just yet.
+takes around 2-3 minutes. Only if you choose to write the data grabbed
+from the database. This program does not download [ALL] vulnerability 
+information from the database. The program still isn't finished just yet.
+
 
 
 Author: AERivas
